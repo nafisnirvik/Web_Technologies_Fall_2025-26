@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Event Registration – Human Written</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background: #f4f6f9;
+        padding: 20px;
+      }
+      .container {
+        width: 500px;
+        margin: auto;
+        background: white;
+        padding: 25px;
+        border-radius: 10px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      }
+      h2 {
+        text-align: center;
+        margin-bottom: 20px;
+      }
+      label {
+        font-weight: bold;
+        display: block;
+        margin-top: 15px;
+      }
+      input[type="text"],
+      input[type="email"] {
+        width: 100%;
+        padding: 10px;
+        margin-top: 5px;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+        font-size: 14px;
+      }
+      .error {
+        color: red;
+        font-size: 13px;
+        margin-top: 5px;
+        display: none;
+      }
+      .btn {
+        width: 100%;
+        padding: 12px;
+        margin-top: 18px;
+        background: #0077ff;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 15px;
+      }
+      .btn:hover {
+        background: #005fcc;
+      }
+      .analytics-panel {
+        background: #eef3ff;
+        padding: 15px;
+        margin-top: 20px;
+        border-radius: 8px;
+        display: none;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+      }
+      th,
+      td {
+        border: 1px solid #aaa;
+        padding: 8px;
+        text-align: left;
+      }
+      th {
+        background: #ddd;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h2>Event Registration</h2>
+
+      <form id="form">
+        <label>Full Name</label>
+        <input type="text" id="name" />
+        <div class="error" id="nameError">
+          Name must be between 6 and 100 characters.
+        </div>
+
+        <label>Professional Email</label>
+        <input type="email" id="email" />
+        <div class="error" id="emailError">
+          Please enter a valid professional email address.
+        </div>
+
+        <label>Company / Institution (Optional)</label>
+        <input type="text" id="company" />
+        <div class="error" id="companyError">
+          Maximum 100 characters allowed.
+        </div>
+
+        <label>Attendance Type</label>
+        <input type="radio" name="attendance" value="Virtual" /> Virtual<br />
+        <input type="radio" name="attendance" value="In-Person" />
+        In-Person<br />
+        <div class="error" id="attendanceError">
+          Please select your attendance type.
+        </div>
+
+        <button type="submit" class="btn">Register</button>
+      </form>
+
+      <button id="toggleAnalytics" class="btn">Show Event Analytics</button>
+
+      <div class="analytics-panel" id="analyticsPanel">
+        <h3>Event Analytics</h3>
+        <p>Total Registrants: <span id="total">0</span></p>
+        <p>Virtual Attendees: <span id="virtual">0</span></p>
+        <p>In-Person Attendees: <span id="inPerson">0</span></p>
+
+        <h4>All Registrants:</h4>
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Company</th>
+              <th>Attendance</th>
+            </tr>
+          </thead>
+          <tbody id="registrantList"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <script>
+      const nameInput = document.getElementById("name");
+      const emailInput = document.getElementById("email");
+      const companyInput = document.getElementById("company");
+
+      const nameError = document.getElementById("nameError");
+      const emailError = document.getElementById("emailError");
+      const companyError = document.getElementById("companyError");
+      const attendanceError = document.getElementById("attendanceError");
+
+      const totalEl = document.getElementById("total");
+      const virtualEl = document.getElementById("virtual");
+      const inPersonEl = document.getElementById("inPerson");
+      const registrantList = document.getElementById("registrantList");
+      const analyticsPanel = document.getElementById("analyticsPanel");
+      const toggleBtn = document.getElementById("toggleAnalytics");
+
+      let total = 0;
+      let virtual = 0;
+      let inPerson = 0;
+      let registrants = [];
+
+      document.getElementById("form").addEventListener("submit", function (e) {
+        e.preventDefault();
+        let isValid = true;
+
+        const name = nameInput.value.trim();
+        if (name.length < 6 || name.length > 100) {
+          nameError.style.display = "block";
+          isValid = false;
+        } else nameError.style.display = "none";
+
+        const email = emailInput.value.trim();
+        const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailPattern.test(email)) {
+          emailError.style.display = "block";
+          isValid = false;
+        } else emailError.style.display = "none";
+
+        const company = companyInput.value.trim();
+        if (company.length > 100) {
+          companyError.style.display = "block";
+          isValid = false;
+        } else companyError.style.display = "none";
+
+        const attendanceInput = document.querySelector(
+          'input[name="attendance"]:checked'
+        );
+        if (!attendanceInput) {
+          attendanceError.style.display = "block";
+          isValid = false;
+        } else attendanceError.style.display = "none";
+
+        if (!isValid) return;
+
+        const registration = {
+          name: name,
+          email: email,
+          company: company || "-",
+          attendance: attendanceInput.value,
+        };
+        registrants.push(registration);
+
+        total++;
+        if (attendanceInput.value === "Virtual") virtual++;
+        else inPerson++;
+
+        totalEl.textContent = total;
+        virtualEl.textContent = virtual;
+        inPersonEl.textContent = inPerson;
+
+        registrantList.innerHTML = "";
+        registrants.forEach((r, index) => {
+          const row = `<tr>
+                <td>${index + 1}</td>
+                <td>${r.name}</td>
+                <td>${r.email}</td>
+                <td>${r.company}</td>
+                <td>${r.attendance}</td>
+            </tr>`;
+          registrantList.innerHTML += row;
+        });
+
+        alert("Registration Successful!");
+        form.reset();
+      });
+
+      toggleBtn.addEventListener("click", function () {
+        if (analyticsPanel.style.display === "none") {
+          analyticsPanel.style.display = "block";
+          toggleBtn.textContent = "Hide Event Analytics";
+        } else {
+          analyticsPanel.style.display = "none";
+          toggleBtn.textContent = "Show Event Analytics";
+        }
+      });
+    </script>
+  </body>
+</html>
